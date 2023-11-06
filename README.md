@@ -4,4 +4,4 @@
 ### Introduction
 ### Data
 
-Here you can find the data of drug shipments for (Florida)[https://drive.google.com/uc?export=download&id=1KMKux-KRF_1oQFWBNstVwXKxyRmXivWt], Washington and Texas.
+Here you can find the data of drug shipments for [Florida](https://dl.dropboxusercontent.com/scl/fi/dzsz8qffzwyz9l3tftvgr/arcos_all_washpost_FL.parquet?rlkey=es6vf6um49wdedjf5ggohuv5d&dl=0), Washington and Texas.
