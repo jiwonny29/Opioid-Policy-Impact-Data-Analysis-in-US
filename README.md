@@ -31,7 +31,7 @@ In the 'Pre-Post Comparison' analysis, we will compare how things were in the st
 We will conduct a more sophisticated analysis to address certain limitations of the pre-post comparison approach. We will employ the 'difference-in-difference' method. Instead of solely comparing Florida, Texas, and Washington before and after the policy changes, we will inquire whether there were more significant changes in overdose deaths in these states following the policy changes compared to other states that did not alter their opioid policies. In this analysis, we will include a linear regression to estimate the 'difference-in-difference' statistically. 
 
 
-### Data
+**3. Data**
 
 In particular, to carry out these analyses, we will utilize three databases:
 
