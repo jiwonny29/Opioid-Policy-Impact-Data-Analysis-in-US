@@ -31,7 +31,7 @@ In the 'Pre-Post Comparison' analysis, we will compare how things were in the st
 We will conduct a more sophisticated analysis to address certain limitations of the pre-post comparison approach. We will employ the 'difference-in-difference' method. Instead of solely comparing Florida, Texas, and Washington before and after the policy changes, we will inquire whether there were more significant changes in overdose deaths in these states following the policy changes compared to other states that did not alter their opioid policies. In this analysis, we will include a linear regression to estimate the 'difference-in-difference' statistically. 
 
 
-**3. Data**
+### Data
 
 In particular, to carry out these analyses, we will utilize three databases:
 
@@ -43,9 +43,10 @@ This dataset is already included in our project inputs and comprises information
 
 This dataset is also provided and corresponds to records from the US Vital Statistics, containing information about every death in the United States. It's important to note that a strategy must be devised for handling missing data, especially in cases where the number of individuals in a specific category (e.g., one county/year/cause of death category) is fewer than 10; in such instances, that data does not appear in the dataset.
 
-**Population** 
+**3. Population** 
 
 To account for the volume of drug overdose deaths and the number of opioids prescribed per capita, we will require the population data for each county by year (or a dataset that allows us to estimate these values). One of the tasks at hand is to locate a dataset that fulfills these requirements.
 
+...
 
 Here you can find the data of drug shipments for [Florida](https://dl.dropboxusercontent.com/scl/fi/dzsz8qffzwyz9l3tftvgr/arcos_all_washpost_FL.parquet?rlkey=es6vf6um49wdedjf5ggohuv5d&dl=0), Washington and Texas.
