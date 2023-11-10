@@ -39,11 +39,11 @@ In particular, to carry out these analyses, we will utilize three databases:
 
 This dataset is already included in our project inputs and comprises information on all prescription opioid drug shipments in the United States from 2006 to 2019.
 
-**2. Vital Statistics Mortality Data:**
+**2. Vital Statistics Mortality Data**
 
 This dataset is also provided and corresponds to records from the US Vital Statistics, containing information about every death in the United States. It's important to note that a strategy must be devised for handling missing data, especially in cases where the number of individuals in a specific category (e.g., one county/year/cause of death category) is fewer than 10; in such instances, that data does not appear in the dataset.
 
-**Population:** 
+**Population** 
 
 To account for the volume of drug overdose deaths and the number of opioids prescribed per capita, we will require the population data for each county by year (or a dataset that allows us to estimate these values). One of the tasks at hand is to locate a dataset that fulfills these requirements.
 
