@@ -28,9 +28,10 @@ filtered_concat_US_VitalStatistics = concat_US_VitalStatistics.copy()[
     concat_US_VitalStatistics["County"].notna()
 ]
 
-
-# "At this point, our dataset should have a shape of (57241, 9), so we are validating this."
-assert filtered_concat_US_VitalStatistics.shape == (57241, 9)
+# We separated 'County' and 'State' to make them distinct variables.
+filtered_concat_US_VitalStatistics[
+    ["County", "State"]
+] = filtered_concat_US_VitalStatistics["County"].str.split(", ", expand=True)
 
 
 # Now we will validate that we only have one record per County, year, and Drug/Alcohol Induced Cause.
@@ -51,14 +52,24 @@ filtered_concat_US_VitalStatistics = filtered_concat_US_VitalStatistics.drop(
 
 # We pivot our table to have it at the county, year level.
 Transformed_US_VitalStatistics = filtered_concat_US_VitalStatistics.pivot(
-    index=["County", "County Code", "Year", "source"],
+    index=["County", "County Code", "Year", "source", "State"],
     columns="Drug/Alcohol Induced Cause",
     values="Deaths",
 ).reset_index()
 
-# Now we validate that our transformed dataset has a shape of (40337, 12).
-assert Transformed_US_VitalStatistics.shape == (40337, 12)
 
+# Now we removed the columns for deaths unrelated to drug overdose causes.
+Transformed_US_VitalStatistics = Transformed_US_VitalStatistics.drop(
+    [
+        "Deaths caused by Alcohol poisonings (overdose) (X45, X65, Y15)",
+        "Deaths caused by All other alcohol-induced causes",
+        "Deaths caused by All other non-drug and non-alcohol causes",
+    ],
+    axis=1,
+)
+
+
+assert not Transformed_US_VitalStatistics.duplicated(["County Code", "Year"]).any()
 
 # Finally, we save the result in our directory '20_intermediate_files'.
 output_path = "../20_intermediate_files/Transformed_US_VitalStatistics.csv"
