@@ -1,10 +1,9 @@
 import pandas as pd
 
 # Household Median Income data (2006) cleaning
-income06 = pd.read_excel(
-    "C:/Users/wonny/Downloads/pds_team/IDS720_PracticalDataScience_JBR/00_source_data/Additional_datasets/median_household_inc06.xls",
-    header=2,
-)
+# changed my codes after getting feedbacks for using relative path
+file_path1 = "00_source_data/Additional_datasets/median_household_inc06.xls"
+income06 = pd.read_excel(file_path1, header=2)
 
 selected_columns06 = [
     "State FIPS",
@@ -28,12 +27,8 @@ income06_upd
 
 
 # Household Median Income data (2011) cleaning
-import pandas as pd
-
-income11 = pd.read_excel(
-    "C:/Users/wonny/Downloads/pds_team/IDS720_PracticalDataScience_JBR/00_source_data/Additional_datasets/median_household_inc11.xls",
-    header=2,
-)
+file_path2 = "00_source_data/Additional_datasets/median_household_inc11.xls"
+income11 = pd.read_excel(file_path2, header=2)
 
 selected_columns11 = [
     "State FIPS",
@@ -57,13 +52,8 @@ income11_upd
 
 
 # Household Median Income data (2016) cleaning
-import pandas as pd
-
-income16 = pd.read_excel(
-    "C:/Users/wonny/Downloads/pds_team/IDS720_PracticalDataScience_JBR/00_source_data/Additional_datasets/median_household_inc16.xls",
-    header=3,
-)
-income16
+file_path3 = "00_source_data/Additional_datasets/median_household_inc16.xls"
+income16 = pd.read_excel(file_path3, header=2)
 
 selected_columns16 = [
     "State FIPS Code",
@@ -94,13 +84,8 @@ income16_upd
 
 
 # Household Median Income data (2019) cleaning
-import pandas as pd
-
-income19 = pd.read_excel(
-    "C:/Users/wonny/Downloads/pds_team/IDS720_PracticalDataScience_JBR/00_source_data/Additional_datasets/median_household_inc19.xls",
-    header=3,
-)
-income19
+file_path4 = "00_source_data/Additional_datasets/median_household_inc19.xls"
+income19 = pd.read_excel(file_path4, header=2)
 
 selected_columns19 = [
     "State FIPS Code",
