@@ -9,7 +9,7 @@ data["pct_greater45"] = data["p_greater45"] / data["tot_pop"]
 # We are going to compute three changes 2006-2007 (TX),2006-2010 (FL), 2006-2012 (WA)
 variables_of_interest = [
     "State",
-    "unemployment_rate",
+    "unemp_avg_rate",
     "morphine_mg_pp",
     "pct_greater45",
 ]
@@ -19,7 +19,7 @@ aux = data[data["year"] == year].copy()
 aux = aux[variables_of_interest]
 aux.rename(
     columns={
-        "unemployment_rate": "unemp_rate_change_since_" + str(year),
+        "unemp_avg_rate": "unemp_rate_change_since_" + str(year),
         "morphine_mg_pp": "morphine_mg_pp_change_since_" + str(year),
         "pct_greater45": "pct_greater45_change_since_" + str(year),
     },
@@ -28,7 +28,7 @@ aux.rename(
 data = data.merge(aux, on="State", how="left")
 # Computing the changes
 data["unemp_rate_change_since_" + str(year)] = (
-    data["unemployment_rate"] / data["unemp_rate_change_since_" + str(year)]
+    data["unemp_avg_rate"] / data["unemp_rate_change_since_" + str(year)]
 ) - 1
 data["morphine_mg_pp_change_since_" + str(year)] = (
     data["morphine_mg_pp"] / data["morphine_mg_pp_change_since_" + str(year)]

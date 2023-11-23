@@ -57,9 +57,13 @@ population = population.rename(
         "Total Population": "tot_pop",
         "Statefips": "state_fips",
         "Year": "year",
-        "Population 45-64": "p_greater45",
+        "Population 45-64": "p_45_65",
+        "Population 65+": "p_greater65",
     }
 )
+
+population["p_greater45"] = population["p_45_65"] + population["p_greater65"]
+
 # Keep just the variables of interest
 population = population["state_fips year tot_pop p_greater45".split()]
 # Grouping by year and state
@@ -108,7 +112,7 @@ unemployment["year"] = [int(string[-4:]) for string in unemployment["variable"]]
 # drop unnecessary variables
 unemployment.drop(columns=["variable"], inplace=True)
 # renaming
-unemployment = unemployment.rename(columns={"value": "unemployment_rate"})
+unemployment = unemployment.rename(columns={"value": "unemp_avg_rate"})
 print(f"unemployment shape: {unemployment.shape}")
 # merging with opioids
 opioids = opioids.merge(
