@@ -238,3 +238,6 @@ merged_table["mean_mortality_rate_per_state_year"] = merged_table.groupby(
 merged_table["filled_mortality_rate"] = merged_table["mortality_rate"].fillna(
     merged_table["mean_mortality_rate_per_state_year"]
 )
+
+output_path = "../20_intermediate_files/final_merged_table.csv"
+merged_table.to_csv(output_path, index=False)
