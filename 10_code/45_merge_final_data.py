@@ -24,6 +24,9 @@ dictionary_fips = dictionary_fips[["state", "state_fips", "county_name", "county
 ###################################################################################################################################################
 ### Importing Counterfactuals
 
+# I am adding the full file path in comments for clarity.
+## https://raw.githubusercontent.com/MIDS-at-Duke/IDS720_PracticalDataScience_JBR/main/20_intermediate_files/counterfactuals_by_euclidean_distance.csv?token=GHSAT0AAAAAACG6UAG4AGFFWD4C6QE3HWXIZLBABZA
+
 counterfactuals_path = (
     "../20_intermediate_files/counterfactuals_by_euclidean_distance.csv"
 )
