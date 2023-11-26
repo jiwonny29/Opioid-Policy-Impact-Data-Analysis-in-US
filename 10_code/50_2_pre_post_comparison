@@ -30,7 +30,14 @@ fl_data = state_yearly_avg[state_yearly_avg["state"] == "FL"]
 wa_data = state_yearly_avg[state_yearly_avg["state"] == "WA"]
 
 # Create the graphs
-fig, (ax_fl, ax_wa) = plt.subplots(nrows=2, ncols=1, figsize=(9, 9))
+fig, (ax_fl, ax_wa) = plt.subplots(nrows=2, ncols=1, figsize=(7, 7))  # Adjusted figsize
+
+# Set the universal y-axis limits for both subplots
+y_axis_limits = (0, 750)
+
+# Colors for the lines
+color_before = "#8D99AE"  # Dark blue-gray
+color_after = "#D90429"  # Bright red
 
 # Florida (FL) graph
 fl_pre_policy_data = fl_data[fl_data["years_from_policy_fl"] < 0]
@@ -38,20 +45,20 @@ fl_post_policy_data = fl_data[fl_data["years_from_policy_fl"] >= 0]
 ax_fl.plot(
     fl_pre_policy_data["years_from_policy_fl"],
     fl_pre_policy_data["morphine_mg_per_capita"],
-    color="blue",
+    color=color_before,
     label="FL Before",
 )
 ax_fl.plot(
     fl_post_policy_data["years_from_policy_fl"],
     fl_post_policy_data["morphine_mg_per_capita"],
-    linestyle="-",
-    color="green",
+    color=color_after,
     label="FL After",
 )
 ax_fl.axvline(x=0, color="black", linestyle="--", label="Policy Change (2010)")
-ax_fl.set_title("Pre-Post Model Graph for Florida")
+ax_fl.set_title("Florida State Pre-Post Policy Change Analysis Graph")
 ax_fl.set_xlabel("Years from Policy Change")
-ax_fl.set_ylabel("Morphine mg Per Capita")
+ax_fl.set_ylabel("Morphine Per Capita (mg)")
+ax_fl.set_ylim(y_axis_limits)
 ax_fl.legend()
 
 # Washington (WA) graph
@@ -60,25 +67,27 @@ wa_post_policy_data = wa_data[wa_data["years_from_policy_wa"] >= 0]
 ax_wa.plot(
     wa_pre_policy_data["years_from_policy_wa"],
     wa_pre_policy_data["morphine_mg_per_capita"],
-    color="purple",
+    color=color_before,
     label="WA Before",
 )
 ax_wa.plot(
     wa_post_policy_data["years_from_policy_wa"],
     wa_post_policy_data["morphine_mg_per_capita"],
-    linestyle="-",
-    color="orange",
+    color=color_after,
     label="WA After",
 )
 ax_wa.axvline(x=0, color="black", linestyle="--", label="Policy Change (2012)")
-ax_wa.set_title("Pre-Post Model Graph for Washington")
+ax_wa.set_title("Washington State Pre-Post Policy Change Analysis Graph")
 ax_wa.set_xlabel("Years from Policy Change")
-ax_wa.set_ylabel("Morphine mg Per Capita")
+ax_wa.set_ylabel("Morphine Per Capita (mg)")
+ax_wa.set_ylim(y_axis_limits)
 ax_wa.legend()
 
 # Display the graphs
 plt.tight_layout()
 plt.show()
+
+# Save the figure
 fig.savefig("Pre-Post Model Graph for Morphine mg Per Capita.png", dpi=300)
 
 
@@ -116,7 +125,7 @@ tx_data = state_yearly_avg[state_yearly_avg["state"] == "TX"]
 def create_and_save_single_line_pre_post_policy_graph(
     data, state_abbr, policy_change_year, filename
 ):
-    fig, ax = plt.subplots(figsize=(6, 6))
+    fig, ax = plt.subplots(figsize=(6, 4))  # Narrower vertical height
 
     pre_policy_data = data[data["years_from_policy"] < 0]
     post_policy_data = data[data["years_from_policy"] >= 0]
@@ -129,18 +138,20 @@ def create_and_save_single_line_pre_post_policy_graph(
     pre_policy_years = pre_policy_data["years_from_policy"].unique()
     post_policy_years = post_policy_data["years_from_policy"].unique()
 
-    # Plot a single line for before and after policy change
+    # Plot a single line for before and after policy change with specified colors
     ax.plot(
         [min(pre_policy_years), 0],
         [pre_policy_mean, pre_policy_mean],
         label=f"{state_abbr} Before",
         marker="o",
+        color="#8d99ae",  # Set line color for "before"
     )
     ax.plot(
         [0, max(post_policy_years)],
         [post_policy_mean, post_policy_mean],
         label=f"{state_abbr} After",
         marker="o",
+        color="#d90429",  # Set line color for "after"
     )
     ax.axvline(
         x=0,
@@ -148,9 +159,10 @@ def create_and_save_single_line_pre_post_policy_graph(
         linestyle="--",
         label=f"Policy Change ({policy_change_year})",
     )
-    ax.set_title(f"{state_abbr} Policy Intervention Effect")
+    ax.set_title(f"The Effect of Policy on Drug-Related Mortality in {state_abbr}")
     ax.set_xlabel("Years from Policy Change")
-    ax.set_ylabel("Mean Mortality Rate")
+    ax.set_ylabel("Avg Mortality Rate per 100K (Per State)")
+    ax.set_ylim(10, 15)  # Set y-axis limits
     ax.legend()
 
     # Adjust layout
@@ -165,11 +177,11 @@ def create_and_save_single_line_pre_post_policy_graph(
 
 # Generate and save graphs for each state separately
 create_and_save_single_line_pre_post_policy_graph(
-    fl_data, "FL", policy_change_years["FL"], "fl_policy_graph.png"
+    fl_data, "Florida", policy_change_years["FL"], "fl_policy_graph.png"
 )
 create_and_save_single_line_pre_post_policy_graph(
-    wa_data, "WA", policy_change_years["WA"], "wa_policy_graph.png"
+    wa_data, "Washington", policy_change_years["WA"], "wa_policy_graph.png"
 )
 create_and_save_single_line_pre_post_policy_graph(
-    tx_data, "TX", policy_change_years["TX"], "tx_policy_graph.png"
+    tx_data, "Texas", policy_change_years["TX"], "tx_policy_graph.png"
 )
