@@ -93,65 +93,83 @@ data = pd.read_csv("../20_intermediate_files/final_merged_table.csv")
 policy_change_years = {
     "FL": 2010,  # Policy change year for Florida (FL)
     "WA": 2012,  # Policy change year for Washington (WA)
-    "TX": 2012,  # Policy change year for Texas (TX)
+    "TX": 2007,  # Policy change year for Texas (TX)
 }
 
 # Filtering data for the states Texas (TX), Florida (FL), and Washington (WA) between the years 2006 and 2015
-state_yearly_avg = data[(data['state'].isin(['TX', 'FL', 'WA'])) & 
-                        (data['year'].between(2006, 2015))][['state', 'year', 'mean_mortality_rate_per_state_year']]
+state_yearly_avg = data[
+    (data["state"].isin(["TX", "FL", "WA"])) & (data["year"].between(2006, 2015))
+][["state", "year", "mean_mortality_rate_per_state_year"]]
 
 # Normalize years relative to the policy change year for each state
-state_yearly_avg['years_from_policy'] = state_yearly_avg.apply(lambda row: row['year'] - policy_change_years[row['state']], axis=1)
+state_yearly_avg["years_from_policy"] = state_yearly_avg.apply(
+    lambda row: row["year"] - policy_change_years[row["state"]], axis=1
+)
 
 # Extract data for each state
 fl_data = state_yearly_avg[state_yearly_avg["state"] == "FL"]
 wa_data = state_yearly_avg[state_yearly_avg["state"] == "WA"]
 tx_data = state_yearly_avg[state_yearly_avg["state"] == "TX"]
 
+
 # Define a function to create and save the pre-post policy graphs with a single line before and after the policy change
-def create_and_save_single_line_pre_post_policy_graph(data, state_abbr, policy_change_year, filename):
+def create_and_save_single_line_pre_post_policy_graph(
+    data, state_abbr, policy_change_year, filename
+):
     fig, ax = plt.subplots(figsize=(6, 6))
-    
+
     pre_policy_data = data[data["years_from_policy"] < 0]
     post_policy_data = data[data["years_from_policy"] >= 0]
-    
+
     # Calculate the average before and after the policy change
     pre_policy_mean = pre_policy_data["mean_mortality_rate_per_state_year"].mean()
     post_policy_mean = post_policy_data["mean_mortality_rate_per_state_year"].mean()
-    
+
     # Get the range of years before and after the policy change
     pre_policy_years = pre_policy_data["years_from_policy"].unique()
     post_policy_years = post_policy_data["years_from_policy"].unique()
-    
+
     # Plot a single line for before and after policy change
     ax.plot(
         [min(pre_policy_years), 0],
         [pre_policy_mean, pre_policy_mean],
         label=f"{state_abbr} Before",
-        marker='o'
+        marker="o",
     )
     ax.plot(
         [0, max(post_policy_years)],
         [post_policy_mean, post_policy_mean],
         label=f"{state_abbr} After",
-        marker='o'
+        marker="o",
     )
-    ax.axvline(x=0, color="black", linestyle="--", label=f"Policy Change ({policy_change_year})")
+    ax.axvline(
+        x=0,
+        color="black",
+        linestyle="--",
+        label=f"Policy Change ({policy_change_year})",
+    )
     ax.set_title(f"{state_abbr} Policy Intervention Effect")
     ax.set_xlabel("Years from Policy Change")
     ax.set_ylabel("Mean Mortality Rate")
     ax.legend()
-    
+
     # Adjust layout
     plt.tight_layout()
-    
+
     # Save the figure
     plt.savefig(filename)
-    
+
     # Close the figure to avoid display in the notebook
     plt.close()
 
+
 # Generate and save graphs for each state separately
-create_and_save_single_line_pre_post_policy_graph(fl_data, "FL", policy_change_years["FL"], "fl_policy_graph.png")
-create_and_save_single_line_pre_post_policy_graph(wa_data, "WA", policy_change_years["WA"], "wa_policy_graph.png")
-create_and_save_single_line_pre_post_policy_graph(tx_data, "TX", policy_change_years["TX"], "tx_policy_graph.png")
+create_and_save_single_line_pre_post_policy_graph(
+    fl_data, "FL", policy_change_years["FL"], "fl_policy_graph.png"
+)
+create_and_save_single_line_pre_post_policy_graph(
+    wa_data, "WA", policy_change_years["WA"], "wa_policy_graph.png"
+)
+create_and_save_single_line_pre_post_policy_graph(
+    tx_data, "TX", policy_change_years["TX"], "tx_policy_graph.png"
+)
