@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -29,10 +30,10 @@ for state, policy_change_year in policy_change_years.items():
 fl_data = state_yearly_avg[state_yearly_avg["state"] == "FL"]
 wa_data = state_yearly_avg[state_yearly_avg["state"] == "WA"]
 
-# Create the graphs
-fig, (ax_fl, ax_wa) = plt.subplots(nrows=2, ncols=1, figsize=(7, 7))  # Adjusted figsize
+# Create the Florida (FL) graph
+fig, ax_fl = plt.subplots(figsize=(6, 4.5))  # Adjusted figsize
 
-# Set the universal y-axis limits for both subplots
+# Set the universal y-axis limits
 y_axis_limits = (0, 750)
 
 # Colors for the lines
@@ -55,11 +56,24 @@ ax_fl.plot(
     label="FL After",
 )
 ax_fl.axvline(x=0, color="black", linestyle="--", label="Policy Change (2010)")
-ax_fl.set_title("Florida State Pre-Post Policy Change Analysis Graph")
+ax_fl.set_title("The Effect of Policy on Morphine Per Capita in Florida")
 ax_fl.set_xlabel("Years from Policy Change")
 ax_fl.set_ylabel("Morphine Per Capita (mg)")
 ax_fl.set_ylim(y_axis_limits)
 ax_fl.legend()
+
+# Define the directory to save the graphs
+result_directory = "../30_results"  # Replace with your actual path
+os.makedirs(result_directory, exist_ok=True)
+
+# Save the Florida (FL) graph as a PNG file in the result directory
+fl_graph_filename = os.path.join(result_directory, "FL_MPP_Change.png")
+plt.tight_layout()
+plt.savefig(fl_graph_filename, dpi=300)
+plt.close()  # Close the figure to avoid display
+
+# Create the Washington (WA) graph
+fig, ax_wa = plt.subplots(figsize=(6, 4.5))  # Adjusted figsize
 
 # Washington (WA) graph
 wa_pre_policy_data = wa_data[wa_data["years_from_policy_wa"] < 0]
@@ -77,21 +91,21 @@ ax_wa.plot(
     label="WA After",
 )
 ax_wa.axvline(x=0, color="black", linestyle="--", label="Policy Change (2012)")
-ax_wa.set_title("Washington State Pre-Post Policy Change Analysis Graph")
+ax_wa.set_title("The Effect of Policy on Morphine Per Capita in Washington")
 ax_wa.set_xlabel("Years from Policy Change")
 ax_wa.set_ylabel("Morphine Per Capita (mg)")
 ax_wa.set_ylim(y_axis_limits)
 ax_wa.legend()
 
-# Display the graphs
+# Save the Washington (WA) graph as a PNG file in the result directory
+wa_graph_filename = os.path.join(result_directory, "WA_MPP_Change.png")
 plt.tight_layout()
-plt.show()
-
-# Save the figure
-fig.savefig("Pre-Post Model Graph for Morphine mg Per Capita.png", dpi=300)
+plt.savefig(wa_graph_filename, dpi=300)
+plt.close()  # Close the figure to avoid display
 
 
 ###################################### Pre-Post Model Comparison on Mortality Rate ######################################
+import os
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -119,6 +133,10 @@ state_yearly_avg["years_from_policy"] = state_yearly_avg.apply(
 fl_data = state_yearly_avg[state_yearly_avg["state"] == "FL"]
 wa_data = state_yearly_avg[state_yearly_avg["state"] == "WA"]
 tx_data = state_yearly_avg[state_yearly_avg["state"] == "TX"]
+
+# Define the directory to save the graphs
+result_directory = "../30_results"  # Replace with your actual path
+os.makedirs(result_directory, exist_ok=True)
 
 
 # Define a function to create and save the pre-post policy graphs with a single line before and after the policy change
@@ -168,8 +186,9 @@ def create_and_save_single_line_pre_post_policy_graph(
     # Adjust layout
     plt.tight_layout()
 
-    # Save the figure
-    plt.savefig(filename)
+    # Save the figure in the result directory
+    graph_filename = os.path.join(result_directory, filename)
+    plt.savefig(graph_filename, dpi=300)
 
     # Close the figure to avoid display in the notebook
     plt.close()
@@ -177,11 +196,11 @@ def create_and_save_single_line_pre_post_policy_graph(
 
 # Generate and save graphs for each state separately
 create_and_save_single_line_pre_post_policy_graph(
-    fl_data, "Florida", policy_change_years["FL"], "fl_policy_graph.png"
+    fl_data, "Florida", policy_change_years["FL"], "FL_Mortality_Change.png"
 )
 create_and_save_single_line_pre_post_policy_graph(
-    wa_data, "Washington", policy_change_years["WA"], "wa_policy_graph.png"
+    wa_data, "Washington", policy_change_years["WA"], "WA_Mortality_Change.png"
 )
 create_and_save_single_line_pre_post_policy_graph(
-    tx_data, "Texas", policy_change_years["TX"], "tx_policy_graph.png"
+    tx_data, "Texas", policy_change_years["TX"], "TX_Mortality_Change.png"
 )
