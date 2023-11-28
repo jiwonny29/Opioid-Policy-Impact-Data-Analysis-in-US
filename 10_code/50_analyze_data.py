@@ -68,7 +68,7 @@ for state in ["FL", "WA"]:
 
     for var in variables:
         # plotting morphine per person over time nad its linear regression before treatment
-        sns.lmplot(
+        g = sns.lmplot(
             x="year",
             y=var,
             hue="treated_county",
@@ -78,7 +78,13 @@ for state in ["FL", "WA"]:
             scatter=False,
             facet_kws=dict(sharex=False),
         )
-        plt.savefig("../30_results/diff_diff_" + state + "_" + var + ".png")
+
+        if var == "morphine_pp":
+            g.set_ylabels("Morphine bought per person (mg)")
+        else:
+            g.set_ylabels("Mortality rate (per 100,000 inhabitants)")
+
+        g.fig.savefig("../30_results/diff_diff_" + state + "_" + var + ".png")
 
     ######## TEXAS ######### biweekly Analysis
 
@@ -197,7 +203,7 @@ import matplotlib.dates as mdates
 
 texas_df["date_num"] = mdates.date2num(texas_df["date"])
 
-sns.lmplot(
+g = sns.lmplot(
     x="date_num",
     y="morphine_pp",
     hue="treated_county",
@@ -207,4 +213,14 @@ sns.lmplot(
     scatter=False,
     facet_kws=dict(sharex=False),
 )
+
+# Adjust x-axis date formatting
+date_format = mdates.DateFormatter("%Y-%m")  # You can adjust the format as needed
+g.set_xticklabels([], rotation=45)
+g.set_ylabels("Morphine bought per person (mg)")
+
+for ax in g.axes.flat:
+    ax.xaxis.set_major_formatter(date_format)
+    ax.set_xlabel("Date")
+
 plt.savefig("../30_results/diff_diff_TX_morphine_pp.png")
