@@ -14,14 +14,6 @@ file_path = "../../arcos_all_washpost.tsv"
 # Read the data
 opioid_df = spark.read.csv(file_path, sep="\t", header=True)
 
-# Define the Parquet file path
-# parquet_file_path = (
-#    "../00_source_data/arcos_all_washpost.parquet"  # Change to your Parquet file path
-# )
-
-# Save as a Parquet file
-# df.write.mode("ingnore").parquet(parquet_file_path)
-
 # Creating a new date variable for grouping
 opioid_df = opioid_df.withColumn(
     "year_month", date_format("TRANSACTION_DATE", "yyyy-MM")
