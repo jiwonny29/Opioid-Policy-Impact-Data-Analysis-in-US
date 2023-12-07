@@ -11,15 +11,14 @@ state_fips = pd.read_csv(
 )
 
 dictionary_fips = pd.read_csv("../00_source_data/usa_fips.csv")
-
-
 dictionary_fips["county_name"] = dictionary_fips["county_name"].str.upper()
-
 dictionary_fips = dictionary_fips.merge(
     state_fips, how="left", on="state_fips", indicator=True
 )
+dictionary_fips = dictionary_fips[["state", "state_fips", "county_fips", "county_name"]]
 
-dictionary_fips = dictionary_fips[["state", "state_fips", "county_name", "county_fips"]]
+assert not dictionary_fips.duplicated(["state", "state_fips", "county_fips"]).any()
+
 
 ###################################################################################################################################################
 ### Importing Counterfactuals
@@ -31,18 +30,20 @@ counterfactuals_path = (
     "../20_intermediate_files/counterfactuals_by_euclidean_distance.csv"
 )
 counterfactuals = pd.read_csv(counterfactuals_path)
-counterfactuals = counterfactuals[["State"]]
-counterfactuals_states = list(counterfactuals["State"])
+counterfactuals_states = counterfactuals[["State"]]
+counterfactuals_states = list(counterfactuals_states["State"])
 filtered_states = counterfactuals_states + ["TX", "FL", "WA"]
 
+filtered_states_texas = list(
+    counterfactuals[counterfactuals["pairing_state"] == "TX"]["State"]
+) + ["TX"]
+
+
 ###################################################################################################################################################
-### Importing Death data. We have info between 2003 and 2015
+### Importing Vitalstatistics data. We have info between 2003 and 2015
 
 vitalstatistics = "../20_intermediate_files/Transformed_US_VitalStatistics.csv"
 vitalstatistics = pd.read_csv(vitalstatistics)
-
-# Dropping source column
-vitalstatistics = vitalstatistics.drop(columns=["source"])
 
 # We convert to int, as it was in float
 vitalstatistics["County Code"] = vitalstatistics["County Code"].astype(int)
@@ -56,36 +57,47 @@ vitalstatistics["county_fips"] = vitalstatistics["County Code"].str[2:]
 vitalstatistics["Year"] = vitalstatistics["Year"].astype(int)
 vitalstatistics["state_fips"] = vitalstatistics["state_fips"].astype(int)
 vitalstatistics["county_fips"] = vitalstatistics["county_fips"].astype(int)
-vitalstatistics = vitalstatistics.drop(columns=["County Code"])
 
-vitalstatistics = vitalstatistics.rename(columns={"Year": "year", "State": "state"})
+vitalstatistics = vitalstatistics.rename(
+    columns={"Year": "year", "State": "state_name", "County": "county"}
+)
+
+
+# Dropping columns
+columns_to_drop = [
+    "Deaths caused by Drug poisonings (overdose) Undetermined (Y10-Y14)",
+    "Deaths caused by Drug poisonings (overdose) Suicide (X60-X64)",
+    "Deaths caused by Drug poisonings (overdose) Homicide (X85)",
+    "Deaths caused by All other drug-induced causes",
+    "County Code",
+    "source",
+    "county",
+]
+vitalstatistics = vitalstatistics.drop(columns=columns_to_drop)
+
+vitalstatistics = vitalstatistics.rename(
+    columns={
+        "Deaths caused by Drug poisonings (overdose) Unintentional (X40-X44)": "death_drug_poisonings_unintentional"
+    }
+)
+
+
+# Dropping Bedford city	2015 and Clifton Forge city	 2015 (2 rows, missing)
+vitalstatistics = vitalstatistics[
+    vitalstatistics["death_drug_poisonings_unintentional"] != "Missing"
+]
 
 # Now we filter by states
-vitalstatistics = vitalstatistics[vitalstatistics["state"].isin(filtered_states)]
-
+vitalstatistics = vitalstatistics[vitalstatistics["state_name"].isin(filtered_states)]
 
 ###################################################################################################################################################
 ### Importing Opiods data. We have info between 2006 and 2019
 
 opioids_path = "../20_intermediate_files/arcos_all_washpost_collapsed.parquet"
 opioids = pd.read_parquet(opioids_path)
-opioids["Year"] = [int(i[:4]) for i in opioids["year_month"]]
+opioids["year"] = [int(i[:4]) for i in opioids["year_month"]]
 
 opioids = opioids[opioids["BUYER_COUNTY"].notna()]
-
-# Dropping drugname and counties column
-opioids = opioids.drop(columns=["DRUG_NAME", "year_month"])
-
-# Now we filter by states
-opioids = opioids[opioids["BUYER_STATE"].isin(filtered_states)]
-
-# Grouping by year and state
-opioids = (
-    opioids.groupby(["BUYER_STATE", "BUYER_COUNTY", "Year"])["total_morphine_mg"]
-    .sum()
-    .reset_index()
-)
-
 
 opioids = opioids.merge(
     dictionary_fips,
@@ -95,10 +107,24 @@ opioids = opioids.merge(
     indicator=True,
 )
 
+# Now we filter by states
+opioids = opioids[opioids["BUYER_STATE"].isin(filtered_states)]
+
 assert (opioids["_merge"] == "both").all()
 
-opioids = opioids.drop(columns=["BUYER_STATE", "BUYER_COUNTY", "_merge"])
-opioids = opioids.rename(columns={"Year": "year"})
+opioids = opioids.rename(columns={"Year": "year", "state": "state_name"})
+
+opioids = (
+    opioids.groupby(
+        ["year", "year_month", "state_name", "state_fips", "county_fips", "county_name"]
+    )
+    .agg(mme=("total_morphine_mg", "sum"))
+    .reset_index()
+)
+
+assert not opioids.duplicated(
+    ["year_month", "state_fips", "county_fips", "year"], keep=False
+).any(), "Se encontraron duplicados en 'opioids'"
 
 
 ###################################################################################################################################################
@@ -111,14 +137,15 @@ population = population[
     ["Statefips", "Countyfips", "Description", "Year", "Total Population"]
 ]
 
-
 # adding state
 population = population.merge(
     state_fips, how="left", left_on="Statefips", right_on="state_fips", indicator=True
 )
 
-# "We remove Countyfips = 0 since it represents the total population of the state."
-population = population[population["Countyfips"] != 0]
+# "We remove Countyfips = 0 (US) and Countyfips = 72 (Puerto Rico)
+population = population[
+    (population["Countyfips"] != 0) & (population["Countyfips"] != 72)
+]
 
 population = population.drop(["Statefips", "_merge", "Description"], axis=1)
 population["state_fips"] = population["state_fips"].astype(int)
@@ -129,22 +156,120 @@ population = population.rename(
         "Total Population": "total_population",
         "Countyfips": "county_fips",
         "Year": "year",
+        "state": "state_name",
     }
 )
 
-
 # Now we filter by states
-population = population[population["state"].isin(filtered_states)]
+population = population[population["state_name"].isin(filtered_states)]
 
 
 ###################################################################################################################################################
 # Now we validate that we have one row per county per year for each dataset before merge
 
 assert not vitalstatistics.duplicated(["state_fips", "county_fips", "year"]).any()
-assert not opioids.duplicated(["state_fips", "county_fips", "year"]).any()
+assert not opioids.duplicated(["year_month", "state_fips", "county_fips", "year"]).any()
 assert not population.duplicated(["state_fips", "county_fips", "year"]).any()
 
 
+###################################################################################################################################################
+# Texas monthly opioids dataset
+# For ease of calculation, we will use the assumption that every month has the same population (since we have population data at an annual level).
+# A more detailed approach could be to perform interpolation, but we will not do that in this case
+
+population_opioids_texas = population.merge(
+    opioids,
+    on=["state_fips", "county_fips", "year", "state_name"],
+    how="outer",
+    indicator="merge_population_opioids",
+)
+
+population_opioids_texas = population_opioids_texas[
+    population_opioids_texas["state_name"].isin(filtered_states_texas)
+]
+population_opioids_texas = population_opioids_texas[
+    (population_opioids_texas["year"] >= 2006)
+]
+
+# We add morphine_mg_per_capita
+population_opioids_texas["mme_per_capita"] = (
+    population_opioids_texas["mme"] / population_opioids_texas["total_population"]
+)
+
+
+# If we validate the join, we obtain 550 records that do not match. However, it has been validated in the database that these are
+# approximately 30 counties in Texas, 10 in Virginia , 4 en Idaho, that are not present in the original Opioids database.
+# population_opioids_texas["merge_population_opioids"].value_counts()
+# both          75533
+# left_only       550
+# right_only        0
+# Name: _merge, dtype: int64
+
+
+# Now we save the monthly Texas database with the information on opioids
+
+population_opioids_texas = population_opioids_texas[
+    [
+        "year",
+        "year_month",
+        "state_name",
+        "state_fips",
+        "county_name",
+        "county_fips",
+        "total_population",
+        "mme",
+        "mme_per_capita",
+        "merge_population_opioids",
+    ]
+]
+
+texas_path = "../20_intermediate_files/texas_population_opioids_monthly.csv"
+population_opioids_texas.to_csv(texas_path, index=False)
+
+
+###################################################################################################################################################
+# US Yearly opioids - vitalstatistics dataset
+
+# Grouping by year the opiods dataset
+opioids = (
+    opioids.groupby(["year", "state_name", "state_fips", "county_name", "county_fips"])[
+        "mme"
+    ]
+    .sum()
+    .reset_index()
+)
+
+#
+vitalstatistics = vitalstatistics[vitalstatistics["year"] >= 2003]
+
+
+# MERGE
+population_vitalstatistics = pd.merge(
+    population,
+    vitalstatistics,
+    on=["state_fips", "county_fips", "year", "state_name"],
+    how="outer",
+    indicator="merge_population_vitalstatistics",
+)
+
+
+population_vitalstatistics_opioids = pd.merge(
+    population_vitalstatistics,
+    opioids,
+    on=["state_fips", "county_fips", "year", "state_name"],
+    how="outer",
+    indicator="merge_population_vitalstatistics_opioids",
+)
+
+# Check JOIN
+# population_vitalstatistics_opioids["merge_population_vitalstatistics"].value_counts()
+# both          10224
+# left_only      5746
+# right_only        4
+# Name: merge_population_vitalstatistics, dtype: int64
+
+
+# right_only = 4
 # BEDFORD CITY has no population data for 2010, 2011, 2012, 2013, 2014, 2015.
 # CLIFTON FORGE CITY has no population data for 2015.
 # Validate with population_vitalstatistics[population_vitalstatistics["_merge"]=="right_only"]
@@ -153,94 +278,74 @@ assert not population.duplicated(["state_fips", "county_fips", "year"]).any()
 # Countyfips = 515, State = VA
 
 
-# We filter by the years that we will consider in the analysis.
-population = population[(population["year"] >= 2006) & (population["year"] <= 2015)]
-vitalstatistics = vitalstatistics[
-    (vitalstatistics["year"] >= 2006) & (vitalstatistics["year"] <= 2015)
-]
-opioids = opioids[(opioids["year"] >= 2006) & (opioids["year"] <= 2015)]
+# population_vitalstatistics_opioids["merge_population_vitalstatistics_opioids"].value_counts()
+# both          10457
+# left_only      5517
+# right_only        0
+# Name: merge_population_vitalstatistics_opioids, dtype: int64
 
 
-population_vitalstatistics = population.merge(
-    vitalstatistics,
-    on=["state_fips", "county_fips", "year"],
-    how="outer",
-    indicator=True,
-)
-
-
-population_opioids = population.merge(
-    opioids, on=["state_fips", "county_fips", "year"], how="outer", indicator=True
-)
-
-
-# Join check. Pending investigation of the causes. More info below.
-population_vitalstatistics.value_counts("_merge")
-population_opioids.value_counts("_merge")
-
-
-"""
-"For now, we will continue progressing with an inner join, ignoring cases where the merge is not happening, 
-so that another team member can proceed with building the graphics for the analysis.
-
-The points where we lost data and need to further investigate the causes are:
-- In the population database, 6 records are missing when joining with the vital statistics database.
-- In the vital statistics database, 117 records are missing when joining with the population.
-- In the opioids database, 514 records are missing when joining with the population.
-- In the final join, we are left with 7470 records out of a total of 7984 that we had in the population. It is pending to investigate the causes."
-"""
-
-
-## final inner
-population_vitalstatistics = population_vitalstatistics.drop(columns=["_merge"])
-merged_table = population_vitalstatistics.merge(
-    opioids, on=["state_fips", "county_fips", "year"], how="inner", indicator=True
-)
-
-# This check validates duplicates, but we still need to evaluate the counties
-# that were lost in the join of population_vitalstatistics and merge_table.
-assert not merged_table.duplicated(["state_fips", "county_fips", "year"]).any()
-
-# Droping some columns
-merged_table = merged_table.drop(
-    [
-        "state_x",
-        "County",
-        "state_y",
-        "_merge",
-        "Deaths caused by All other drug-induced causes",
-        "Deaths caused by Drug poisonings (overdose) Suicide (X60-X64)",
-        "Deaths caused by Drug poisonings (overdose) Undetermined (Y10-Y14)",
-    ],
-    axis=1,
-)
-
-merged_table = merged_table.rename(
-    columns={
-        "Deaths caused by Drug poisonings (overdose) Unintentional (X40-X44)": "death_drug_poisonings_unintentional"
-    }
-)
-
-merged_table["death_drug_poisonings_unintentional"] = merged_table[
+population_vitalstatistics_opioids[
     "death_drug_poisonings_unintentional"
-].astype(float)
+] = population_vitalstatistics_opioids["death_drug_poisonings_unintentional"].astype(
+    float
+)
 
 # "We calculate the mortality rate per 100,000 people."
-merged_table["mortality_rate"] = (
-    merged_table["death_drug_poisonings_unintentional"]
-    / merged_table["total_population"]
+population_vitalstatistics_opioids["mortality_rate_unintentional_drug_poisoning"] = (
+    population_vitalstatistics_opioids["death_drug_poisonings_unintentional"]
+    / population_vitalstatistics_opioids["total_population"]
     * 100000
 )
 
-# Calculate the mean mortality rate per state and year using groupby and transform
-merged_table["mean_mortality_rate_per_state_year"] = merged_table.groupby(
-    ["year", "state_fips"]
-)["mortality_rate"].transform(np.mean)
 
-# Create a new variable filled_mortality_rate that defaults to mortality_rate but fills NaN values with the mean_mortality_rate_per_state_year
-merged_table["filled_mortality_rate"] = merged_table["mortality_rate"].fillna(
-    merged_table["mean_mortality_rate_per_state_year"]
+# Calculate the mean mortality rate per state and year using groupby and transform
+population_vitalstatistics_opioids[
+    "mean_mortality_rate_unintentional_drug_poisoning_per_state_year"
+] = population_vitalstatistics_opioids.groupby(["year", "state_fips"])[
+    "mortality_rate_unintentional_drug_poisoning"
+].transform(
+    np.mean
 )
 
-output_path = "../20_intermediate_files/final_merged_table.csv"
-merged_table.to_csv(output_path, index=False)
+# Create a new variable filled_mortality_rate that defaults to mortality_rate but fills NaN values with the mean_mortality_rate_per_state_year
+population_vitalstatistics_opioids[
+    "filled_mortality_rate_unintentional_drug_poisoning"
+] = population_vitalstatistics_opioids[
+    "mortality_rate_unintentional_drug_poisoning"
+].fillna(
+    population_vitalstatistics_opioids[
+        "mean_mortality_rate_unintentional_drug_poisoning_per_state_year"
+    ]
+)
+
+# We add morphine_mg_per_capita
+population_vitalstatistics_opioids["mme_per_capita"] = (
+    population_vitalstatistics_opioids["mme"]
+    / population_vitalstatistics_opioids["total_population"]
+)
+
+
+population_vitalstatistics_opioids = population_vitalstatistics_opioids[
+    [
+        "year",
+        "state_name",
+        "state_fips",
+        "county_name",
+        "county_fips",
+        "total_population",
+        "death_drug_poisonings_unintentional",
+        "mortality_rate_unintentional_drug_poisoning",
+        "mean_mortality_rate_unintentional_drug_poisoning_per_state_year",
+        "filled_mortality_rate_unintentional_drug_poisoning",
+        "mme",
+        "mme_per_capita",
+        "merge_population_vitalstatistics",
+        "merge_population_vitalstatistics_opioids",
+    ]
+]
+
+output_path = (
+    "../20_intermediate_files/us_population_vitalstatistics_opioids_yearly.csv"
+)
+population_vitalstatistics_opioids.to_csv(output_path, index=False)
