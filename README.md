@@ -47,6 +47,4 @@ This dataset is also provided and corresponds to records from the US Vital Stati
 
 To account for the volume of drug overdose deaths and the number of opioids prescribed per capita, we will require the population data for each county by year (or a dataset that allows us to estimate these values). One of the tasks at hand is to locate a dataset that fulfills these requirements.
 
-...
 
-Here you can find the data of drug shipments for [Florida](https://dl.dropboxusercontent.com/scl/fi/dzsz8qffzwyz9l3tftvgr/arcos_all_washpost_FL.parquet?rlkey=es6vf6um49wdedjf5ggohuv5d&dl=0), Washington and Texas.
