@@ -5,9 +5,7 @@ import os
 ######################### Pre-Post Model Comparison on MME (FL, WA) #########################
 
 # Switch to the main branch to access the data file
-os.system(
-    "git checkout main"
-)  
+os.system("git checkout main")
 
 # Load the data from the main branch us_population_vitalstatistics_opioids_yearly.csv file
 rawdata = pd.read_csv(
@@ -18,10 +16,7 @@ rawdata = pd.read_csv(
 os.system("git checkout pre_post_comparison")
 
 # Filter rows where 'merge_population_vitalstatistics' and 'merge_population_vitalstatistics_opioids' are both True
-data = rawdata[
-    (rawdata["merge_population_vitalstatistics"] == "both")
-    & (rawdata["merge_population_vitalstatistics_opioids"] == "both")
-]
+data = rawdata[rawdata["merge_population_vitalstatistics_opioids"] == "both"]
 
 # Select the relevant columns
 data = data[["year", "state_name", "mme_per_capita"]]
@@ -48,46 +43,54 @@ line_color_before = "#8D99AE"
 line_color_after = "#D80032"
 
 # Separate the data into before and after the policy change
-before_policy_change = state_year_avg_fl[state_year_avg_fl["year"] < policy_change_year_fl]
-after_policy_change = state_year_avg_fl[state_year_avg_fl["year"] >= policy_change_year_fl]
+before_policy_change = state_year_avg_fl[
+    state_year_avg_fl["year"] < policy_change_year_fl
+]
+after_policy_change = state_year_avg_fl[
+    state_year_avg_fl["year"] >= policy_change_year_fl
+]
 
 # Plot the mean with error bars for each period using the 'year' column
 ax_fl.errorbar(
     before_policy_change["year"],
     before_policy_change["mean"],
     yerr=before_policy_change["sem"],
-    fmt='o-',  # 'o' for circular markers, '-' for a solid line
+    fmt="o-",  # 'o' for circular markers, '-' for a solid line
     color=line_color_before,
     ecolor=error_bar_color,
     capsize=3,  # Set the size of the caps on the error bars
-    label='Before Policy Change',
+    label="Before Policy Change",
 )
 ax_fl.errorbar(
     after_policy_change["year"],
     after_policy_change["mean"],
     yerr=after_policy_change["sem"],
-    fmt='o-',  # 'o' for circular markers, '-' for a solid line
+    fmt="o-",  # 'o' for circular markers, '-' for a solid line
     color=line_color_after,
     ecolor=error_bar_color,
     capsize=3,  # Set the size of the caps on the error bars
-    label='After Policy Change',
+    label="After Policy Change",
 )
 
 # Set the x-axis to show every two years
-ax_fl.set_xticks(range(2006, 2016, 2))
+ax_fl.set_xticks(range(2006, 2020, 2))
 # Set the x-axis labels to show the actual years
-ax_fl.set_xticklabels(range(2006, 2016, 2))
+ax_fl.set_xticklabels(range(2006, 2020, 2))
 
 # Set y-axis to start from 0
 ax_fl.set_ylim(bottom=0)
 
 # Draw a vertical line for the policy change year
-ax_fl.axvline(x=policy_change_year_fl, color='black', linestyle='--', label='Policy Change (2010)')
+ax_fl.axvline(
+    x=policy_change_year_fl, color="black", linestyle="--", label="Policy Change (2010)"
+)
 
 # Additional plot formatting
-ax_fl.set_title('The Effect of Policy on Morphine Milligram Equivalent Per Capita in FL')
-ax_fl.set_xlabel('Year')
-ax_fl.set_ylabel('Morphine Milligram Equivalent Per Capita')
+ax_fl.set_title(
+    "The Effect of Policy on Morphine Milligram Equivalent Per Capita in FL"
+)
+ax_fl.set_xlabel("Year")
+ax_fl.set_ylabel("Morphine Milligram Equivalent Per Capita")
 ax_fl.legend()
 
 # Define the directory to save the graphs
@@ -95,7 +98,7 @@ result_directory = "../30_results"
 os.makedirs(result_directory, exist_ok=True)
 
 # Save the Florida (FL) graph as a PNG file in the result directory
-fl_graph_filename = os.path.join(result_directory, "FL_MEE_Change_Avg.png")
+fl_graph_filename = os.path.join(result_directory, "FL_MME_Change_Avg.png")
 plt.tight_layout()
 plt.savefig(fl_graph_filename, dpi=300)
 plt.close()  # Close the figure to avoid display
@@ -116,8 +119,12 @@ line_color_before = "#8D99AE"
 line_color_after = "#D80032"
 
 # Separate the data into before and after the policy change
-before_policy_change_wa = state_year_avg_wa[state_year_avg_wa["year"] < policy_change_year_wa]
-after_policy_change_wa = state_year_avg_wa[state_year_avg_wa["year"] >= policy_change_year_wa]
+before_policy_change_wa = state_year_avg_wa[
+    state_year_avg_wa["year"] < policy_change_year_wa
+]
+after_policy_change_wa = state_year_avg_wa[
+    state_year_avg_wa["year"] >= policy_change_year_wa
+]
 
 # Plot the mean with error bars for each period using the 'year' column
 ax_wa.errorbar(
@@ -142,24 +149,28 @@ ax_wa.errorbar(
 )
 
 # Set the x-axis to show every two years
-ax_wa.set_xticks(range(2006, 2016, 2))
+ax_wa.set_xticks(range(2006, 2020, 2))
 # Set the x-axis labels to show the actual years
-ax_wa.set_xticklabels(range(2006, 2016, 2))
+ax_wa.set_xticklabels(range(2006, 2020, 2))
 
 # Set y-axis to start from 0
 ax_wa.set_ylim(bottom=0)
 
 # Draw a vertical line for the policy change year
-ax_wa.axvline(x=policy_change_year_wa, color='black', linestyle='--', label='Policy Change (2012)')
+ax_wa.axvline(
+    x=policy_change_year_wa, color="black", linestyle="--", label="Policy Change (2012)"
+)
 
 # Additional plot formatting
-ax_wa.set_title('The Effect of Policy on Morphine Milligram Equivalent Per Capita in WA')
-ax_wa.set_xlabel('Year')
-ax_wa.set_ylabel('Morphine Milligram Equivalent Per Capita')
+ax_wa.set_title(
+    "The Effect of Policy on Morphine Milligram Equivalent Per Capita in WA"
+)
+ax_wa.set_xlabel("Year")
+ax_wa.set_ylabel("Morphine Milligram Equivalent Per Capita")
 ax_wa.legend()
 
 # Save the Washington (WA) graph as a PNG file in the result directory
-wa_graph_filename = os.path.join(result_directory, "WA_MEE_Change_Avg.png")
+wa_graph_filename = os.path.join(result_directory, "WA_MME_Change_Avg.png")
 plt.tight_layout()
 plt.savefig(wa_graph_filename, dpi=300)
 plt.close()  # Close the figure to avoid display
@@ -172,24 +183,25 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-os.system(
-    "git checkout main"
-)  
+os.system("git checkout main")
 
-rawdata = pd.read_csv("../20_intermediate_files/us_population_vitalstatistics_opioids_yearly.csv")
+rawdata = pd.read_csv(
+    "../20_intermediate_files/us_population_vitalstatistics_opioids_yearly.csv"
+)
 
 # Filter rows where both merge flags are True
-data = rawdata[
-    (rawdata["merge_population_vitalstatistics"] == "both") &
-    (rawdata["merge_population_vitalstatistics_opioids"] == "both")
-]
+data = rawdata[rawdata["merge_population_vitalstatistics"] == "both"]
 
 # Select the relevant columns
-data = data[["year", "state_name", "filled_mortality_rate_unintentional_drug_poisoning"]]
+data = data[
+    ["year", "state_name", "filled_mortality_rate_unintentional_drug_poisoning"]
+]
 
 # Group by year and state to calculate the mean and standard error
 state_year_avg = (
-    data.groupby(["year", "state_name"])["filled_mortality_rate_unintentional_drug_poisoning"]
+    data.groupby(["year", "state_name"])[
+        "filled_mortality_rate_unintentional_drug_poisoning"
+    ]
     .agg(["mean", "sem"])
     .reset_index()
 )
@@ -207,6 +219,7 @@ line_color_after = "#D80032"
 # Define the directory to save the graphs
 result_directory = "../30_results"  # Replace with your actual path
 os.makedirs(result_directory, exist_ok=True)
+
 
 # Create a function to plot for each state
 def plot_state(state_name, policy_change_year, state_label):
@@ -237,18 +250,28 @@ def plot_state(state_name, policy_change_year, state_label):
         label="After Policy Change",
     )
 
-    ax.set_xticks(range(min(state_data["year"]), max(state_data["year"]) + 1, 2))
+    ax.set_xticks(range(2004, max(state_data["year"]) + 1, 2))
     ax.set_ylim(bottom=0)
-    ax.axvline(x=policy_change_year, color='black', linestyle='--', label=f'Policy Change ({policy_change_year})')
-    ax.set_title(f"The Effect of Policy on Unintentional Drug Poisoning Mortality Rate in {state_label}")
+    ax.axvline(
+        x=policy_change_year,
+        color="black",
+        linestyle="--",
+        label=f"Policy Change ({policy_change_year})",
+    )
+    ax.set_title(
+        f"The Effect of Policy on Unintentional Drug Poisoning Mortality Rate in {state_label}"
+    )
     ax.set_xlabel("Year")
     ax.set_ylabel("Unintentional Drug Poisoning Mortality Rate")
     ax.legend()
 
-    graph_filename = os.path.join(result_directory, f"{state_label}_MortalityRate_Change_Avg.png")
+    graph_filename = os.path.join(
+        result_directory, f"{state_label}_MortalityRate_Change_Avg.png"
+    )
     plt.tight_layout()
     plt.savefig(graph_filename, dpi=300)
     plt.close()
+
 
 # Plot for each state
 plot_state("FL", policy_change_year_fl, "FL")
@@ -359,7 +382,7 @@ result_directory = "../30_results"
 os.makedirs(result_directory, exist_ok=True)
 
 # Save the Texas (TX) graph as a PNG file in the result directory
-tx_graph_filename = os.path.join(result_directory, "TX_MEE_Change_Avg.png")
+tx_graph_filename = os.path.join(result_directory, "TX_MME_Change_Avg.png")
 plt.tight_layout()
 plt.savefig(tx_graph_filename, dpi=300)
 plt.show()  # Display the figure
