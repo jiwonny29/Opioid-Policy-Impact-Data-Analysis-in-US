@@ -1,6 +1,7 @@
 import seaborn as sns
 import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
 
 
 def plot_regression(
@@ -32,7 +33,7 @@ def plot_regression(
 
     # Linear regression for the original state before and after the breakpoint year
     for label, df, color in zip(
-        [f"{state_filter} Before", f"{state_filter} After"],
+        [f"{state_filter} Before Policy Change", f"{state_filter} After Policy Change"],
         [df_before_break, df_after_break],
         [color_original_before, color_original_after],
     ):
@@ -57,7 +58,7 @@ def plot_regression(
 
     # Linear regression for the counterfactual states before and after the breakpoint year
     for label, df, state, color in zip(
-        ["Counterfactual Before", "Counterfactual After"],
+        ["CF Before Policy Change", "CF After Policy Change"],
         [df_before_break_counterfactual, df_after_break_counterfactual],
         counterfactual_states,
         [
@@ -84,7 +85,10 @@ def plot_regression(
     )
 
     # Add labels and legend
-    plt.xlabel("Year")
+    if data is monthly_data:
+        plt.xlabel("Months from Policy Change")
+    else:
+        plt.xlabel("Year")
 
     if response_variable == "mme_per_capita":
         plt.ylabel("Morphine Milligram Equivalent Per Capita")
@@ -108,6 +112,22 @@ def plot_regression(
 annual_data = pd.read_csv(
     "../20_intermediate_files/us_population_vitalstatistics_opioids_yearly.csv"
 )
+
+
+# Load the dataset
+monthly_data = pd.read_csv(
+    "../20_intermediate_files/texas_population_opioids_monthly.csv"
+)
+monthly_data = monthly_data[monthly_data["merge_population_opioids"] == "both"]
+monthly_data["year_month"] = pd.to_datetime(monthly_data["year_month"])
+policy_change_date = pd.to_datetime("2007-01")
+
+# Create the new column 'months_from_policy_change'
+monthly_data["year"] = (
+    monthly_data["year_month"] - policy_change_date
+) / np.timedelta64(1, "M")
+monthly_data["year"] = np.floor(monthly_data["year"]).astype(int)
+
 
 # Texas vs NY, VA, ID - filled_mortality_rate_unintentional_drug_poisoning
 plot_regression(
